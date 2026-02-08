@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>น้องรุ้ง AI - สนทนา</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #F8FAFC; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 14px; line-height: 1.5; }
+        .bot { background: white; color: #374151; border-bottom-left-radius: 4px; border: 1px solid #E2E8F0; }
+        .user { background: #10B981; color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        #checkoutModal { display: none; position: fixed; inset: 0; z-index: 9999; background: white; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <header class="bg-emerald-600 px-5 pt-8 pb-4 rounded-b-[30px] shadow-lg sticky top-0 z-50">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="bg-white/20 w-9 h-9 rounded-lg flex items-center justify-center text-white backdrop-blur-md border border-white/30">
+                    <i class="fa-solid fa-comment-dots text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-black text-white leading-none tracking-tight">น้องรุ้ง AI</h1>
+                    <p class="text-[9px] text-emerald-100 font-medium uppercase tracking-tighter mt-1">AI Assistant Service</p>
+                </div>
+            </div>
+
+            <div class="flex items-center bg-white/10 px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-sm">
+                <span class="w-1.5 h-1.5 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                <span class="text-[10px] text-white font-bold uppercase tracking-widest">Online</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4 pb-48 no-scrollbar">
+        <div class="flex justify-start">
+            <div class="chat-bubble bot shadow-sm">
+                สวัสดีจ้า! น้องรุ้งพร้อมตอบทุกเรื่องในบุรีรัมย์จ้า อยากให้แนะนำที่เที่ยว หรือหาสินค้าอะไรดีคะ?
+            </div>
+        </div>
+    </main>
+
+    <div class="fixed bottom-24 left-0 right-0 z-[1001]">
+        <div class="px-4 pb-3 flex space-x-2 overflow-x-auto no-scrollbar">
+            <button onclick="quickAsk('แนะนำที่เที่ยวหน่อย')" class="whitespace-nowrap bg-white text-emerald-600 border border-emerald-50 px-4 py-2 rounded-full text-[11px] font-bold shadow-sm active:scale-95 transition-transform">🎡 ที่เที่ยวแนะนำ</button>
+            <button onclick="quickAsk('ของฝากบุรีรัมย์')" class="whitespace-nowrap bg-white text-emerald-600 border border-emerald-50 px-4 py-2 rounded-full text-[11px] font-bold shadow-sm active:scale-95 transition-transform">🛍️ ของดีเมืองบุรีรัมย์</button>
+            <button onclick="quickAsk('โมโตจีพี')" class="whitespace-nowrap bg-white text-emerald-500 border border-emerald-50 px-4 py-2 rounded-full text-[11px] font-bold shadow-sm active:scale-95 transition-transform"><i class="fa-solid fa-motorcycle mr-1"></i> โมโตจีพี</button>       
+        </div>
+
+        <div class="px-4">
+            <div class="bg-white rounded-2xl shadow-2xl flex items-center p-1.5 border border-emerald-50">
+                <input type="text" id="userInput" placeholder="ถามน้องรุ้งได้ทุกเรื่อง..." class="flex-1 bg-transparent border-none focus:ring-0 px-4 py-2 text-sm placeholder:text-gray-300">
+                <button id="sendBtn" onclick="sendMessage()" class="bg-emerald-500 text-white w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-emerald-100">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkoutModal">
+        <div class="bg-white border-b p-4 flex items-center sticky top-0 z-10 shadow-sm">
+            <button onclick="closeCheckout()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <i class="fa-solid fa-chevron-left text-lg"></i>
+            </button>
+            <span class="ml-4 font-bold text-gray-800">จองสินค้าผ่านน้องรุ้ง</span>
+        </div>
+        <iframe id="checkoutFrame" src="" class="w-full h-full border-none"></iframe>
+    </div>
+    
+    <%- include('partials/nav') %>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function quickAsk(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        // ฟังก์ชันจองสินค้า (เรียกใช้จากปุ่มที่บอทส่งมา)
+        function openCheckoutFromChat(productId) {
+            const modal = document.getElementById('checkoutModal');
+            const frame = document.getElementById('checkoutFrame');
+            
+            // ป้องกัน ID ซ้ำซ้อนและประกอบ URL
+            const cleanId = productId.toString().replace('1000', '');
+            const checkoutUrl = `https://pre-order.xn--42cf1c1az5dtau6v.com/checkout.php?product_id=1000${cleanId}`;
+            
+            frame.src = checkoutUrl;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCheckout() {
+            const modal = document.getElementById('checkoutModal');
+            const frame = document.getElementById('checkoutFrame');
+            
+            modal.style.display = 'none';
+            frame.src = ''; 
+            document.body.style.overflow = 'auto';
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            userInput.value = '';
+            sendBtn.disabled = true;
+
+            // User UI
+            chatBox.innerHTML += `<div class="flex justify-end mb-4"><div class="chat-bubble user">${message}</div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Typing Indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `
+                <div id="${loadingId}" class="flex justify-start mb-4">
+                    <div class="text-[10px] text-gray-400 italic ml-2">น้องรุ้งกำลังพิมพ์...</div>
+                </div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                
+                document.getElementById(loadingId).remove();
+
+                // ใช้ innerHTML เพื่อให้แสดงปุ่มและลิงก์จาก Controller ได้
+                chatBox.innerHTML += `
+                
+                    <div class="flex justify-start mb-4 animate-in fade-in duration-500">
+                        <div class="chat-bubble bot shadow-sm">
+                            ${data.reply}
+                        </div>
+                    </div>`;
+            } catch (err) {
+                document.getElementById(loadingId).innerHTML = '<div class="text-red-400 text-xs">ระบบขัดข้องนิดหน่อยจ้า</div>';
+            }
+
+            sendBtn.disabled = false;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>

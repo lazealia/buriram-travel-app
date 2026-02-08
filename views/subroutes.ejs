@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Kanit', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 pb-20">
+
+    <header class="bg-indigo-600 px-5 pt-8 pb-16 rounded-b-[40px] shadow-lg sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <a href="/routes" class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-xl text-white backdrop-blur-md active:scale-90 transition-transform">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-white leading-none">เส้นทางย่อย</h1>
+                <p class="text-indigo-200 text-[10px] mt-1 uppercase tracking-widest">
+                    <%= route?.serviceName || 'Explore Sub-Routes' %>
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <main class="px-5 -mt-8 relative z-10">
+        <% if (route && route.sub_routes && route.sub_routes.length > 0) { %>
+            <div class="space-y-6">
+                <% route.sub_routes.forEach(function(sub) { %>
+                    <div class="bg-white rounded-[30px] overflow-hidden shadow-sm border border-gray-100 transition-all active:scale-[0.99]">
+                        <div class="h-48 relative">
+                            <img src="<%= sub.tourism_sub_route_image_cover ? 'https://admin.trinitytrip.com/uploads/tourism_main_route_image/' + sub.tourism_sub_route_image_cover : 'https://via.placeholder.com/500x300?text=No+Image' %>" 
+                                 class="w-full h-full object-cover"
+                                 onerror="this.src='https://via.placeholder.com/500x300?text=No+Image'">
+                            
+                            <% if (sub.tourism_sub_route_name_initial) { %>
+                            <div class="absolute top-4 right-4 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                                <%= sub.tourism_sub_route_name_initial %>
+                            </div>
+                            <% } %>
+                        </div>
+
+                        <div class="p-5">
+                            <h3 class="text-md font-bold text-gray-800 mb-3 leading-snug">
+                                <%= sub.tourism_sub_route_name %>
+                            </h3>
+                            
+                            <div class="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-3">
+                                <%- sub.tourism_sub_route_detail %>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                                <span class="text-[10px] text-gray-400">
+                                    <i class="fa-solid fa-sort-numeric-down mr-1"></i> ลำดับที่ <%= sub.tourism_sub_route_order %>
+                                </span>
+                                
+                                <a href="/subroute-activities/<%= sub.tourism_sub_route_id %>?mainId=<%= route.serviceID %>" 
+                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors flex items-center gap-2">
+                                    <i class="fa-solid fa-person-walking-luggage"></i>
+                                    ดูรายละเอียดกิจกรรม (<%= sub.activities ? sub.activities.length : 0 %>)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="bg-white rounded-[30px] p-10 text-center shadow-sm">
+                <i class="fa-solid fa-route text-gray-200 text-5xl mb-4"></i>
+                <p class="text-gray-400">ยังไม่มีข้อมูลเส้นทางย่อยสำหรับเส้นทางนี้</p>
+                <a href="/routes" class="inline-block mt-4 text-indigo-600 font-bold text-sm">ย้อนกลับ</a>
+            </div>
+        <% } %>
+    </main>
+
+    <%- include('partials/nav', { currentPage: 'services' }) %>
+
+</body>
+</html>

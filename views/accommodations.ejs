@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Kanit', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 pb-28">
+
+    <header class="bg-indigo-600 px-5 pt-8 pb-4 rounded-b-[30px] shadow-lg sticky top-0 z-50">
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <a href="/services" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg text-white backdrop-blur-sm active:scale-90 transition-transform">
+                    <i class="fa-solid fa-chevron-left text-sm"></i>
+                </a>
+
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <div>
+                        <h1 class="text-base font-black text-white leading-none tracking-tight">ที่พักบุรีรัมย์</h1>
+                        <p class="text-[9px] text-indigo-200 font-medium uppercase tracking-tighter mt-1">Buri Ram Accommodation</p>
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-white/10 backdrop-blur-md rounded-xl p-1 flex items-center border border-white/20">
+                    <div class="w-7 h-7 flex items-center justify-center text-indigo-100">
+                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                    </div>
+                    <input type="text" id="accSearch" onkeyup="filterAccommodations()" 
+                           placeholder="ค้นหาชื่อที่พัก..." 
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-xs text-white placeholder:text-indigo-200/60 py-1 outline-none">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="accContainer" class="p-4 space-y-6">
+        <% if (accommodations && accommodations.length > 0) { %>
+            <% accommodations.forEach(function(item) { %>
+                <% if (item.community?.province_id == 20 || item.serviceContact?.Location?.ProvinceName?.includes('บุรีรัมย์')) { %>
+                    <div class="acc-card bg-white rounded-[35px] overflow-hidden shadow-sm border border-gray-100 group transition-all active:scale-[0.98]">
+                        <div class="h-52 relative">
+                            <img src="<%= item.serviceImage || 'https://via.placeholder.com/500x300?text=No+Image' %>" 
+                                 class="w-full h-full object-cover" 
+                                 onerror="this.src='https://via.placeholder.com/500x300?text=No+Image'">
+                            
+                            <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
+                                <span class="text-[10px] font-bold text-indigo-600 uppercase">
+                                    <i class="fa-solid fa-hotel mr-1"></i> 
+                                    <%= item.serviceType || 'ที่พัก' %>
+                                </span>
+                            </div>
+
+                            <div class="absolute bottom-4 right-4 bg-indigo-600 text-white px-3 py-1 rounded-xl shadow-lg">
+                                <span class="text-[10px] font-bold">฿<%= item.servicePrice?.Price || 'N/A' %></span>
+                            </div>
+                        </div>
+
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-gray-800 leading-tight">
+                                    <%= item.serviceName %>
+                                </h3>
+                            </div>
+                            
+                            <div class="flex items-center text-gray-400 text-xs mb-4">
+                                <i class="fa-solid fa-location-dot mr-2 text-red-400"></i>
+                                <span>
+                                    อ.<%= item.serviceContact?.Location?.DistrictName || item.community?.amphur_name %> จ.บุรีรัมย์
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-dashed border-gray-100">
+                                <div class="flex -space-x-2">
+                                    <% if(item.serviceContact?.Telephone) { %>
+                                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 border-2 border-white">
+                                            <i class="fa-solid fa-phone text-[10px]"></i>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                
+                                <a href="/accommodation-detail/<%= item.serviceId %>" 
+                                    class="bg-indigo-600 text-white px-5 py-2 rounded-2xl text-xs font-bold flex items-center hover:bg-indigo-700 transition-colors">
+                                    ดูรายละเอียด <i class="fa-solid fa-chevron-right ml-2 text-[10px]"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            <% }); %>
+        <% } else { %>
+            <div class="flex flex-col items-center justify-center py-20 text-center">
+                <i class="fa-solid fa-bed text-gray-200 text-6xl mb-4"></i>
+                <p class="text-gray-400">ไม่พบข้อมูลที่พักในขณะนี้</p>
+            </div>
+        <% } %>
+        
+        <div id="noSearch" class="hidden flex flex-col items-center justify-center py-20 text-center">
+            <i class="fa-solid fa-magnifying-glass text-gray-200 text-6xl mb-4"></i>
+            <p class="text-gray-400">ไม่พบที่พักที่ค้นหา</p>
+        </div>
+    </main>
+
+    <%- include('partials/nav', { currentPage: 'services' }) %>
+
+    <script>
+    function filterAccommodations() {
+        const query = document.getElementById('accSearch').value.toLowerCase();
+        const cards = document.getElementsByClassName('acc-card');
+        const noSearch = document.getElementById('noSearch');
+        let hasResults = false;
+
+        Array.from(cards).forEach(card => {
+            const content = card.innerText.toLowerCase();
+            if (content.includes(query)) {
+                card.style.display = "block";
+                hasResults = true;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        if (noSearch) {
+            noSearch.style.display = hasResults ? "none" : "flex";
+        }
+    }
+    </script>
+</body>
+</html>

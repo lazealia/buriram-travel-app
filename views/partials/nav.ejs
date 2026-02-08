@@ -1,0 +1,43 @@
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-[2000]">
+    <div class="grid grid-cols-5 h-20 w-full items-center">
+        
+        <a href="/shop" class="flex flex-col items-center justify-center <%= currentPage === 'shop' ? 'text-orange-600' : 'text-gray-300' %>">
+            <i class="fa-solid fa-store text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">ร้านค้า</span>
+        </a>
+
+        <a href="/services" class="flex flex-col items-center justify-center <%= currentPage === 'services' ? 'text-indigo-600' : 'text-gray-300' %>">
+            <i class="fa-solid fa-shapes text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">บริการ</span>
+        </a>
+
+        <a href="/" class="flex flex-col items-center justify-center relative h-full">
+            <div class="flex items-center justify-center transition-all duration-300
+                <%= currentPage === 'home' 
+                    ? 'bg-indigo-600 text-white w-12 h-12 rounded-xl -mt-12 shadow-lg border-4 border-white' 
+                    : 'bg-white text-gray-400 w-12 h-12 rounded-xl -mt-8 shadow-md border border-gray-100' %>">
+                <i class="fa-solid fa-house text-xl"></i>
+            </div>
+            <span class="text-[10px] mt-1 <%= currentPage === 'home' ? 'font-black text-indigo-600' : 'text-gray-400' %>">หน้าหลัก</span>
+        </a>
+
+        <a href="/chat" class="flex flex-col items-center justify-center <%= currentPage === 'chat' ? 'text-emerald-500' : 'text-gray-400' %>">
+            <i class="fa-solid fa-comment-dots text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">น้องรุ้ง AI</span>
+        </a>
+
+        <div class="relative group flex flex-col items-center justify-center h-full">
+            <button class="flex flex-col items-center text-gray-400 cursor-pointer w-full">
+                <i class="fa-solid fa-language text-xl"></i>
+                <span class="text-[10px] mt-1 font-bold">ภาษา</span>
+            </button>
+            <div class="absolute bottom-full mb-4 right-0 bg-white border border-gray-100 shadow-2xl py-1 w-28 hidden group-hover:block z-[2001]">
+                <button onclick="changeLanguage('th')" class="w-full text-left px-4 py-2 text-[11px] font-bold hover:bg-gray-50 border-b border-gray-50">🇹🇭 ไทย</button>
+                <button onclick="changeLanguage('en')" class="w-full text-left px-4 py-2 text-[11px] font-bold hover:bg-gray-50">🇺🇸 English</button>
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<%- include('translate-script') %>

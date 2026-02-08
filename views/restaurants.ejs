@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Kanit', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 pb-28">
+
+    <header class="bg-indigo-600 px-5 pt-8 pb-4 rounded-b-[30px] shadow-lg sticky top-0 z-50">
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+                <a href="/services" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg text-white backdrop-blur-sm active:scale-90 transition-transform">
+                    <i class="fa-solid fa-chevron-left text-sm"></i>
+                </a>
+                <div class="flex-shrink-0">
+                    <h1 class="text-base font-black text-white leading-none tracking-tight">ร้านอาหาร</h1>
+                    <p class="text-[9px] text-indigo-200 font-medium uppercase tracking-tighter mt-1">Local Dining</p>
+                </div>
+                <div class="flex-1 bg-white/10 backdrop-blur-md rounded-xl p-1 flex items-center border border-white/20">
+                    <div class="w-7 h-7 flex items-center justify-center text-indigo-100">
+                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                    </div>
+                    <input type="text" id="resSearch" onkeyup="filterRestaurants()" 
+                           placeholder="ค้นหาชื่อร้านหรืออำเภอ..." 
+                           class="flex-1 bg-transparent border-none focus:ring-0 text-xs text-white placeholder:text-indigo-200/60 py-1">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="resContainer" class="p-4 space-y-6">
+        <% if (restaurants && restaurants.length > 0) { %>
+            <% restaurants.forEach(function(item) { %>
+                <div class="res-card bg-white rounded-[35px] overflow-hidden shadow-sm border border-gray-100 group transition-all active:scale-[0.98]">
+                    <div class="h-48 relative">
+                        <img src="<%= item.serviceImage %>" 
+                             class="w-full h-full object-cover" 
+                             onerror="this.src='https://via.placeholder.com/500x300?text=No+Image'">
+                        
+                        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm">
+                            <span class="text-[10px] font-bold text-indigo-600 uppercase">
+                                <i class="fa-solid fa-utensils mr-1"></i> <%= item.serviceType %>
+                            </span>
+                        </div>
+
+                        <% if(item.servicePrice && item.servicePrice.Price) { %>
+                        <div class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-bold">
+                            ฿ <%= item.servicePrice.Price %>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <div class="p-5">
+                        <h3 class="text-lg font-bold text-gray-800 leading-tight mb-1">
+                            <%= item.serviceName %>
+                        </h3>
+                        
+                        <div class="flex items-center text-gray-400 text-xs mb-4">
+                            <i class="fa-solid fa-location-dot mr-2 text-red-400"></i>
+                            <span class="truncate">
+                                อ.<%= item.serviceContact.Location.DistrictName.trim() %> จ.<%= item.serviceContact.Location.ProvinceName %>
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-dashed border-gray-100">
+                            <div class="flex items-center gap-2">
+                                <a href="tel:<%= item.serviceContact.Telephone %>" class="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600 active:scale-90 transition-transform">
+                                    <i class="fa-solid fa-phone text-sm"></i>
+                                </a>
+                                <span class="text-[10px] font-bold text-gray-500"><%= item.serviceContact.Telephone %></span>
+                            </div>
+                            
+                            <a href="/restaurant-detail/<%= item.serviceId %>" 
+                                class="bg-indigo-600 text-white px-5 py-2 rounded-2xl text-xs font-bold flex items-center shadow-lg shadow-indigo-100">
+                                ดูข้อมูลร้าน <i class="fa-solid fa-chevron-right ml-2 text-[8px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <div class="text-center py-20">
+                <i class="fa-solid fa-store-slash text-gray-200 text-6xl mb-4"></i>
+                <p class="text-gray-400 font-bold">ไม่พบข้อมูลร้านอาหาร</p>
+            </div>
+        <% } %>
+        
+        <div id="noSearch" class="hidden flex flex-col items-center justify-center py-20 text-center">
+            <i class="fa-solid fa-magnifying-glass text-gray-200 text-6xl mb-4"></i>
+            <p class="text-gray-400 font-bold">ไม่พบร้านอาหารที่ตรงกับการค้นหา</p>
+        </div>
+    </main>
+
+    <%- include('partials/nav', { currentPage: 'services' }) %>
+
+    <script>
+    function filterRestaurants() {
+        const query = document.getElementById('resSearch').value.toLowerCase().trim();
+        const cards = document.getElementsByClassName('res-card');
+        const noSearch = document.getElementById('noSearch');
+        let hasResults = false;
+
+        Array.from(cards).forEach(card => {
+            const content = card.innerText.toLowerCase();
+            if (content.includes(query)) {
+                card.style.display = "block";
+                hasResults = true;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // ควบคุมการแสดงผลข้อความ "ไม่พบผลลัพธ์"
+        if (noSearch) {
+            if (!hasResults && query !== "") {
+                noSearch.classList.remove('hidden');
+            } else {
+                noSearch.classList.add('hidden');
+            }
+        }
+    }
+    </script>
+</body>
+</html>

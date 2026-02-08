@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style> 
+        body { font-family: 'Kanit', sans-serif; }
+        #map { width: 100%; height: 350px; border-radius: 30px; z-index: 1; }
+        .number-marker { 
+            background-color: #4f46e5; 
+            color: white; 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            border: 3px solid white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px; 
+            font-weight: bold; 
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); 
+        }
+        /* แก้ไขรอยหยักของขอบรูป */
+        .img-gradient-overlay {
+            background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.6));
+        }
+    </style>
+</head>
+<body class="bg-gray-50 pb-28">
+
+    <header class="bg-indigo-600 px-5 pt-8 pb-16 rounded-b-[40px] shadow-lg sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <a href="/subroutes/<%= mainId %>" class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-xl text-white backdrop-blur-md active:scale-90 transition-transform border border-white/30">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-white leading-none"><%= appName %></h1>
+                <p class="text-indigo-200 text-[10px] mt-1 uppercase tracking-widest">Activity Route Map</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="px-5 -mt-8 relative z-10">
+        <div class="bg-white p-2 rounded-[35px] shadow-xl mb-4 border border-gray-100">
+            <div id="map"></div>
+        </div>
+
+        <div class="mb-8">
+            <a id="btn-google-route" href="#" target="_blank" class="w-full bg-indigo-600 text-white py-4 rounded-[25px] font-bold text-sm flex items-center justify-center gap-3 shadow-lg shadow-indigo-200 active:scale-95 transition-all">
+                <i class="fa-solid fa-map-location-dot text-lg"></i>
+                <span>เริ่มนำทางทุกจุด (Google Maps)</span>
+            </a>
+        </div>
+
+        <div class="space-y-6">
+            <% if (activities && activities.length > 0) { %>
+                <% activities.forEach(function(item, index) { %>
+                    <% const act = item.activity; %>
+                    <div class="bg-white rounded-[35px] overflow-hidden shadow-sm border border-gray-100 transition-all hover:shadow-md">
+                        <div class="h-52 relative">
+                            <img src="<%= act.activity_image_cover %>" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/500x300?text=No+Image'">
+                            <div class="absolute inset-0 img-gradient-overlay"></div>
+                            <div class="absolute top-4 left-4 bg-indigo-600 text-white px-4 py-1.5 rounded-full text-[11px] font-bold shadow-lg border border-white/20">
+                                จุดที่ <%= item.tourism_sub_route_activity_order || (index + 1) %>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2 leading-tight"><%= act.activity_name %></h3>
+                            
+                            <div class="text-sm text-gray-500 mb-5 leading-relaxed line-clamp-3">
+                                <%- act.activity_detail %>
+                            </div>
+                            
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center text-[12px] text-gray-400 font-medium">
+                                        <i class="fa-solid fa-clock mr-1.5 text-indigo-400"></i> <%= act.activity_duration %> นาที
+                                    </span>
+                                    <span class="text-indigo-600 font-bold text-sm">
+                                        <%= act.activity_price > 0 ? act.activity_price + ' ฿' : 'ฟรี' %>
+                                    </span>
+                                </div>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=<%= act.activity_latitude %>,<%= act.activity_longitude %>" 
+                                   target="_blank" 
+                                   class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl font-bold text-[11px] flex items-center gap-2 active:scale-90 transition-transform">
+                                    <i class="fa-solid fa-location-arrow"></i> นำทางจุดนี้
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center py-20 bg-white rounded-[35px] shadow-inner border-2 border-dashed border-gray-100">
+                    <i class="fa-solid fa-map-pin text-gray-200 text-4xl mb-3"></i>
+                    <p class="text-gray-400 text-sm">ยังไม่มีข้อมูลกิจกรรมในขณะนี้</p>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <%- include('partials/nav', { currentPage: 'services' }) %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. เตรียมข้อมูลพิกัด (ดัก Error กรณีข้อมูลพิกัดไม่ครบ)
+            const locations = [
+                <% activities.forEach(function(item, index) { %>
+                    { 
+                        lat: parseFloat("<%= item.activity.activity_latitude %>"), 
+                        lng: parseFloat("<%= item.activity.activity_longitude %>"), 
+                        name: `<%= item.activity.activity_name %>`,
+                        order: "<%= item.tourism_sub_route_activity_order || (index + 1) %>"
+                    },
+                <% }); %>
+            ].filter(loc => !isNaN(loc.lat) && !isNaN(loc.lng));
+
+            if (locations.length === 0) {
+                document.getElementById('map').innerHTML = '<div class="h-full flex items-center justify-center text-gray-400 text-sm">ไม่พบพิกัดบนแผนที่</div>';
+                return;
+            }
+
+            // 2. ตั้งค่า Map (Leaflet)
+            const map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false 
+            });
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+            const markers = [];
+            const pathCoords = [];
+
+            locations.forEach((loc) => {
+                const pos = [loc.lat, loc.lng];
+                pathCoords.push(pos);
+                
+                const icon = L.divIcon({ 
+                    className: '', 
+                    html: `<div class="number-marker">${loc.order}</div>`, 
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+                
+                const marker = L.marker(pos, { icon: icon }).addTo(map).bindPopup(`<b>จุดที่ ${loc.order}</b><br>${loc.name}`);
+                markers.push(marker);
+            });
+
+            // ปรับขนาด Map ให้คลุมทุดจุด
+            const group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.3));
+
+            // วาดเส้นประเชื่อมโยง
+            L.polyline(pathCoords, { 
+                color: '#4f46e5', 
+                weight: 4, 
+                dashArray: '10, 10',
+                opacity: 0.5 
+            }).addTo(map);
+
+            // 3. สร้าง Google Maps URL แบบ Multi-stop ที่ถูกต้อง
+            // Format: https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=...
+            if (locations.length > 0) {
+                const origin = `${locations[0].lat},${locations[0].lng}`;
+                const destination = `${locations[locations.length-1].lat},${locations[locations.length-1].lng}`;
+                
+                let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+                
+                if (locations.length > 2) {
+                    const waypoints = locations.slice(1, -1).map(l => `${l.lat},${l.lng}`).join('|');
+                    url += `&waypoints=${waypoints}`;
+                }
+                
+                document.getElementById('btn-google-route').href = url;
+            }
+        });
+    </script>
+</body>
+</html>

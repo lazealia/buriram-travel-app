@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= appName %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
+</head>
+<body class="bg-white pb-32">
+
+    <% if (item) { %>
+        <div class="relative h-[45vh] w-full overflow-hidden bg-gray-200">
+            <img src="<%= item.serviceImage %>" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+            
+            <a href="/accommodations" class="absolute top-12 left-5 w-11 h-11 flex items-center justify-center bg-white/20 backdrop-blur-lg rounded-2xl text-white border border-white/30 active:scale-90 transition-all">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+
+            <div class="absolute bottom-14 left-6">
+                <span class="bg-indigo-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-xl shadow-lg uppercase tracking-wider">
+                    <i class="fa-solid fa-hotel mr-1.5"></i> <%= item.serviceType %>
+                </span>
+            </div>
+        </div>
+
+        <main class="relative -mt-10 px-6 bg-white rounded-t-[45px] pt-10 shadow-2xl">
+            <div class="flex flex-col gap-5">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h1 class="text-2xl font-black text-gray-900 leading-tight"><%= item.serviceName %></h1>
+                        <div class="flex items-center text-gray-400 text-xs mt-2">
+                            <i class="fa-solid fa-location-dot mr-2 text-red-500"></i>
+                            <span>อ.<%= item.serviceContact.Location.DistrictName %> จ.บุรีรัมย์</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">เริ่มต้นที่</p>
+                        <p class="text-2xl font-black text-indigo-600">฿<%= item.servicePrice.Price %></p>
+                    </div>
+                </div>
+
+                <hr class="border-gray-50">
+
+                <div class="bg-gray-50 p-4 rounded-3xl flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm">
+                        <i class="fa-solid fa-id-card-clip text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">ผู้ดูแล / วิสาหกิจ</p>
+                        <p class="text-xs font-bold text-gray-700 leading-tight"><%= item.serviceContact.OwnerName %></p>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <span class="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>รายละเอียดที่พัก
+                    </h2>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        <%= item.serviceDetail || 'ยินดีต้อนรับสู่ ' + item.serviceName + ' ที่พักคุณภาพบรรยากาศดีในจังหวัดบุรีรัมย์ สะอาด สะดวก ปลอดภัย เหมาะสำหรับการพักผ่อนอย่างแท้จริง' %>
+                    </p>
+                </div>
+
+                <% if (item.serviceContact.Location.Latitude && item.serviceContact.Location.Longitude) { %>
+                <div class="pt-4">
+                    <a href="https://www.google.com/maps?q=<%= item.serviceContact.Location.Latitude %>,<%= item.serviceContact.Location.Longitude %>" 
+                       target="_blank"
+                       class="w-full flex items-center justify-center gap-3 bg-white border-2 border-indigo-100 text-indigo-600 p-4 rounded-[25px] font-bold active:bg-indigo-50 transition-all">
+                        <i class="fa-solid fa-map-location-dot text-lg"></i>
+                        ดูตำแหน่งบน Google Maps
+                    </a>
+                </div>
+                <br>
+                <% } %>
+            </div>
+        </main>
+
+        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-xl border-t border-gray-100 flex gap-4 z-[100]">
+            <a href="tel:<%= item.serviceContact.Telephone %>" 
+               class="flex-[2] bg-emerald-500 text-white flex items-center justify-center gap-3 py-4 rounded-[22px] font-bold shadow-lg shadow-emerald-200 active:scale-95 transition-all">
+                <i class="fa-solid fa-phone-volume"></i> โทรจองตอนนี้
+            </a>
+            <% if (item.serviceContact.Facebook) { %>
+            <a href="<%= item.serviceContact.Facebook %>" target="_blank"
+               class="flex-1 bg-blue-100 text-blue-600 flex items-center justify-center py-4 rounded-[22px] font-bold active:scale-95 transition-all">
+                <i class="fa-brands fa-facebook-f text-lg"></i>
+            </a>
+            <% } %>
+        </div>
+
+    <% } else { %>
+        <div class="flex flex-col items-center justify-center h-screen px-10 text-center">
+            <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                <i class="fa-solid fa-bed-pulse text-4xl text-gray-200"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">ไม่พบข้อมูลที่พักจ้า</h2>
+            <p class="text-gray-400 text-sm mt-2">กรุณาลองใหม่อีกครั้ง หรือกลับไปหน้าหลัก</p>
+            <a href="/accommodations" class="mt-8 bg-indigo-600 text-white px-10 py-3.5 rounded-2xl font-bold shadow-lg shadow-indigo-100">กลับไปหน้ารวม</a>
+        </div>
+    <% } %>
+
+    <%- include('partials/nav', { currentPage: 'services' }) %>
+</body>
+</html>

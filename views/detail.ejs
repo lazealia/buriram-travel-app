@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= place ? place.name : 'ไม่พบข้อมูล' %> - ข้อมูลสถานที่</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>body { font-family: 'Kanit', sans-serif; }</style>
+</head>
+<body class="bg-gray-50">
+
+    <% if (place) { %>
+        <div class="relative h-[45vh] w-full">
+            <img src="<%= place.img %>" onerror="this.src='https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800'" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            
+            <button onclick="window.location.href='/places'" 
+                    class="absolute top-6 left-6 bg-white/20 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/40 transition-all shadow-lg">
+                <i class="fa-solid fa-chevron-left text-lg"></i>
+            </button>
+        </div>
+
+        <div class="relative -mt-12 bg-white rounded-t-[40px] px-8 py-10 shadow-2xl min-h-[60vh]">
+            <div class="flex justify-between items-center mb-6">
+                <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                    Travel Destination
+                </span>
+                <div class="flex items-center text-yellow-500">
+                    <i class="fa-solid fa-star mr-1"></i>
+                    <span class="text-gray-800 font-bold">4.9</span>
+                    <span class="text-gray-400 text-xs ml-1 font-normal">(จาก TAT)</span>
+                </div>
+            </div>
+
+            <h1 class="text-3xl font-bold text-gray-900 mb-2 leading-tight">
+                <%= place.name %>
+            </h1>
+            <p class="text-gray-500 text-sm mb-8 flex items-center">
+                <i class="fa-solid fa-location-dot text-indigo-500 mr-2 text-base"></i>
+                <%= place.location %>
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-gray-50 p-4 rounded-3xl border border-gray-100 flex items-center">
+                    <div class="w-10 h-10 bg-indigo-600/10 rounded-2xl flex items-center justify-center mr-3 text-indigo-600">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400">ข้อมูลเบื้องต้น</p>
+                        <p class="text-xs font-bold text-gray-800"><%= place.price %></p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-3xl border border-gray-100 flex items-center">
+                    <div class="w-10 h-10 bg-green-600/10 rounded-2xl flex items-center justify-center mr-3 text-green-600">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400">เวลาเปิด</p>
+                        <p class="text-xs font-bold text-gray-800">เปิดให้บริการทุกวัน</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="text-lg font-bold text-gray-800 mb-3">เกี่ยวกับสถานที่</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-10">
+                <%= place.description %>
+            </p>
+
+            <div class="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-gray-100 flex gap-4 z-50">
+                <button class="flex-1 bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-200 transition-all flex items-center justify-center"
+                        onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=<%= place.coords[0] %>,<%= place.coords[1] %>')">
+                    <i class="fa-solid fa-route mr-2"></i> เริ่มนำทางทันที
+                </button>
+                <button class="bg-indigo-50 text-indigo-700 w-14 h-14 rounded-2xl flex items-center justify-center hover:bg-indigo-100 transition-all">
+                    <i class="fa-solid fa-heart text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="h-24"></div>
+        </div>
+    <% } else { %>
+        <div class="flex flex-col items-center justify-center h-screen p-8 text-center">
+            <i class="fa-solid fa-circle-exclamation text-6xl text-gray-300 mb-4"></i>
+            <h1 class="text-2xl font-bold text-gray-800">ไม่พบข้อมูลสถานที่</h1>
+            <button onclick="window.location.href='/'" class="mt-4 text-indigo-600 font-bold">กลับหน้าแรก</button>
+        </div>
+    <% } %>
+        <%- include('partials/translate-script') %>
+</body>
+</html>
