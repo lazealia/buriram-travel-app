@@ -66,7 +66,7 @@ views/: หน้าจอแสดงผล (EJS Templates) เช่น หน
 ⚠️ ข้อควรระวัง (Important Notes)
 Security: อย่าลืมตรวจสอบว่าไฟล์ .env ถูกเพิ่มลงใน .gitignore แล้ว เพื่อความปลอดภัยของ API Keys
 
-Node.js: แนะนำให้ใช้เวอร์ชัน v24git add README.md (LTS)
+Node.js: แนะนำให้ใช้เวอร์ชัน v24(LTS)
 
 
 API Endpoints: ตรวจสอบว่า TAT_PROVINCE_ID และ provinceId ใน RCBT ถูกตั้งค่าเป็นบุรีรัมย์แล้ว 
