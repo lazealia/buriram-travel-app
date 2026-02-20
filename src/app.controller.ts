@@ -20,8 +20,8 @@ export class AppController {
     routes: { data: [], lastFetch: 0 },
     activities: { data: [], lastFetch: 0 }
   };
-  // private readonly CACHE_TTL = 600 * 1000;
-  private readonly CACHE_TTL = 0;
+  private readonly CACHE_TTL = 300 * 1000;
+  // private readonly CACHE_TTL = 0;
   private async getCachedData(key: string, url: string) {
     const now = Date.now();
     if (this.cache[key].data.length > 0 && (now - this.cache[key].lastFetch) < this.CACHE_TTL) {
@@ -280,13 +280,6 @@ export class AppController {
     } catch (e) { return { currentPage: 'services', activity: null }; }
   }
 
-  // @Get('shop')
-  // @Render('shop')
-  // async getShop(@Query('search') s?: string) {
-  //   let data = await this.getCachedData('products', process.env.RCBT_PRODUCT_URL!);
-  //   if (s) data = data.filter(p => p.serviceName?.toLowerCase().includes(s.toLowerCase()));
-  //   return { currentPage: 'shop', appName: 'ตลาดชุมชน', products: data };
-  // }
   @Get('shop')
   @Render('shop')
   async getShop(
