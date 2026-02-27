@@ -11,7 +11,10 @@
         body { font-family: 'Kanit', sans-serif; background-color: #fcfcfd; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .category-pill.active { background-color: #ea580c; color: white; border-color: #ea580c; }
-        .product-card { transition: transform 0.2s ease; cursor: pointer; }
+        .product-card { transition: transform 0.2s ease; }
+        #modalDescription ul { list-style-type: disc; margin-left: 1.25rem; margin-top: 0.5rem; }
+        #modalDescription p { margin-bottom: 0.75rem; }
+        #modalDescription strong { font-weight: 700; color: #374151; }
     </style>
 </head>
 <body class="pb-24">
@@ -45,11 +48,7 @@
         <% ['ทั้งหมด', 'ของกิน', 'ผลไม้', 'ของใช้', 'ผ้าไหม', 'สุขภาพ'].forEach((cat) => { %>
             <a href="/shop?category=<%= cat %>&search=<%= pagination.search %>" 
                 class="category-pill <%= pagination.category === cat ? 'active' : '' %> whitespace-nowrap px-6 py-2 rounded-full border border-orange-200 text-xs font-bold text-orange-600 bg-white shadow-sm transition-all">
-                <% if(cat === 'ของกิน') { %> ของกิน
-                <% } else if(cat === 'ผลไม้') { %> ผลไม้
-                <% } else if(cat === 'ของใช้') { %> ของใช้
-                <% } else if(cat === 'สุขภาพ') { %> สุขภาพ
-                <% } else { %> <%= cat %> <% } %>
+                <%= cat %>
             </a>
         <% }); %>
     </div>
@@ -64,7 +63,6 @@
             const oLink = (item.serviceOrder?.OrderLink || '').trim();
             const bLink = (item.serviceOrder?.BookingLink || '').trim();
             const bStatus = item.serviceOrder?.BookingStatus;
-            
             const tel = (item.serviceContact?.Telephone || '').trim();
             const line = (item.serviceContact?.Line || '').trim();
 
@@ -81,26 +79,32 @@
                 actionUrl = `tel:${tel}`;
                 btnText = 'โทรสอบถาม'; btnClass = 'bg-blue-600'; btnIcon = 'fa-solid fa-phone';
             }
+
+            const hasDetail = item.serviceDetail && item.serviceDetail !== 'null' && item.serviceDetail.trim() !== '';
+            const ownerName = item.serviceContact?.OwnerName || 'ร้านค้าชุมชน';
+            const priceText = item.servicePrice > 0 ? '฿' + item.servicePrice : 'สอบถามราคา';
         %>
-            <div class="product-card bg-white rounded-[30px] shadow-sm border border-orange-50 overflow-hidden flex flex-col active:scale-95 transition-all"
-                 onclick="if('<%= actionUrl %>' !== '#') window.open('<%= actionUrl %>', '_blank')">
+            <div class="product-card bg-white rounded-[30px] shadow-sm border border-orange-50 overflow-hidden flex flex-col active:scale-95 transition-all">
                 
-                <div class="h-44 relative overflow-hidden bg-gray-50">
+                <div class="h-44 relative overflow-hidden bg-gray-50 cursor-zoom-in"
+                     onclick="openProductModal('<%= item.serviceName.replace(/'/g, "\\'") %>', `<%- hasDetail ? item.serviceDetail : 'ไม่มีรายละเอียดสินค้าเพิ่มเติม' %>`, '<%= item.serviceImage %>', '<%= ownerName %>', '<%= tel %>', '<%= priceText %>', '<%= actionUrl %>', '<%= btnText %>', '<%= btnClass %>', '<%= btnIcon %>')">
                     <img src="<%= item.serviceImage %>" class="w-full h-full object-cover" loading="lazy">
+                    <div class="absolute bottom-3 right-3 bg-black/40 backdrop-blur-md text-white text-[8px] px-2 py-1 rounded-full flex items-center gap-1">
+                        <i class="fa-solid fa-expand"></i> ดูรายละเอียด
+                    </div>
                 </div>
 
                 <div class="p-3 flex-grow flex flex-col">
                     <h3 class="text-[13px] font-bold text-gray-800 line-clamp-1 mb-0.5"><%= item.serviceName %></h3>
                     <div class="flex items-center gap-1 mb-3 text-gray-400">
                         <i class="fa-solid fa-store text-[9px] text-orange-400"></i>
-                        <span class="text-[10px] line-clamp-1 font-medium"><%= item.serviceContact?.OwnerName || 'ร้านค้า' %></span>
+                        <span class="text-[10px] line-clamp-1 font-medium"><%= ownerName %></span>
                     </div>
                     
                     <div class="mt-auto flex items-center justify-between">
-                        <p class="text-sm font-black text-orange-600">
-                            <%= item.servicePrice > 0 ? '฿' + item.servicePrice : 'สอบถาม' %>
-                        </p>
-                        <div class="<%= btnClass %> text-white px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-md">
+                        <p class="text-sm font-black text-orange-600"><%= priceText %></p>
+                        <div onclick="window.open('<%= actionUrl %>', '_blank')" 
+                             class="<%= btnClass %> text-white px-2 py-1.5 rounded-xl flex items-center gap-1 shadow-md cursor-pointer active:opacity-80 transition-opacity">
                             <i class="fa-solid <%= btnIcon %> text-[10px]"></i>
                             <span class="text-[9px] font-bold text-nowrap"><%= btnText %></span>
                         </div>
@@ -109,6 +113,54 @@
             </div>
         <% }); %>
     </main>
+
+    <div id="productModal" class="fixed inset-0 z-[100] hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeProductModal()"></div>
+        
+        <div id="modalContent" class="relative w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-[40px] overflow-hidden transform translate-y-full transition-transform duration-300 ease-out shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="sticky top-0 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-50 flex justify-between items-center z-10">
+                <div>
+                    <h2 id="modalTitle" class="text-base font-bold text-gray-800 truncate pr-4"></h2>
+                    <p id="modalOwner" class="text-[10px] text-orange-500 font-medium"></p>
+                </div>
+                <button onclick="closeProductModal()" class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto p-6">
+                <img id="modalImage" src="" class="w-full h-64 object-cover rounded-[30px] mb-6 shadow-sm">
+                
+                <div class="flex items-center justify-between mb-6 bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                    <div>
+                        <p class="text-[10px] text-orange-400 uppercase font-bold tracking-wider">ราคาเสนอขาย</p>
+                        <p id="modalPrice" class="text-xl font-black text-orange-600"></p>
+                    </div>
+                    <div id="modalContactBox" class="text-right">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ติดต่อร้านค้า</p>
+                        <p id="modalTel" class="text-sm font-bold text-gray-700"></p>
+                    </div>
+                </div>
+
+                <div class="prose prose-sm">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-orange-400"></i> รายละเอียดสินค้า
+                    </h4>
+                    <div id="modalDescription" class="text-[13px] text-gray-600 leading-relaxed"></div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-white border-t border-gray-50">
+                <a id="modalActionBtn" href="#" target="_blank" class="w-full py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-white font-bold transition-transform active:scale-95">
+                    <i id="modalActionIcon" class="fa-solid"></i>
+                    <span id="modalActionText"></span>
+                </a>
+                <button onclick="closeProductModal()" class="w-full mt-3 py-2 text-gray-400 text-[11px] font-bold uppercase tracking-widest">
+                    ปิดหน้านี้
+                </button>
+            </div>
+        </div>
+    </div>
 
     <% if (pagination.total > 1) { %>
         <div class="flex justify-center items-center gap-4 py-8">
@@ -125,6 +177,52 @@
     <% } %>
 
     <%- include('partials/nav') %>
+
+    <script>
+        function openProductModal(name, detail, image, owner, tel, price, actionUrl, btnText, btnClass, btnIcon) {
+            const modal = document.getElementById('productModal');
+            const content = document.getElementById('modalContent');
+            
+            // Set Text/Content
+            document.getElementById('modalTitle').innerText = name;
+            document.getElementById('modalOwner').innerHTML = `<i class="fa-solid fa-store mr-1"></i> ${owner}`;
+            document.getElementById('modalDescription').innerHTML = detail;
+            document.getElementById('modalImage').src = image;
+            document.getElementById('modalPrice').innerText = price;
+            document.getElementById('modalTel').innerText = tel || 'ไม่ระบุเบอร์โทร';
+            
+            // Setup Action Button
+            const actionBtn = document.getElementById('modalActionBtn');
+            const actionIcon = document.getElementById('modalActionIcon');
+            const actionText = document.getElementById('modalActionText');
+            
+            actionBtn.href = actionUrl;
+            actionText.innerText = btnText;
+            
+            // Reset and apply classes
+            actionBtn.className = `w-full py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-white font-bold transition-transform active:scale-95 ${btnClass}`;
+            actionIcon.className = `fa-solid ${btnIcon}`;
+
+            // Show Modal
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            const content = document.getElementById('modalContent');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+    </script>
 
 </body>
 </html>

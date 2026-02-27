@@ -6,77 +6,188 @@
     <title><%= appName %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Kanit', sans-serif; } </style>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style> 
+        body { font-family: 'Kanit', sans-serif; background-color: #fcfcfd; }
+        #map { width: 100%; height: 300px; border-radius: 30px; z-index: 1; }
+        
+        /* ปรับปรุงปุ่มรายการเส้นทางย่อย */
+        .subroute-item { 
+            transition: all 0.2s; 
+            border: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left; /* ให้ข้อความชิดซ้าย */
+        }
+        .subroute-item.active { 
+            background-color: #4f46e5; 
+            color: white; 
+            border-color: #4f46e5;
+            box-shadow: 0 8px 15px -3px rgba(79, 70, 229, 0.2);
+        }
+        .number-marker { 
+            background-color: #4f46e5; color: white; width: 28px; height: 28px; 
+            border-radius: 50%; border: 3px solid white; display: flex; 
+            align-items: center; justify-content: center; font-size: 11px; font-weight: bold; 
+        }
+    </style>
 </head>
-<body class="bg-gray-50 pb-20">
+<body class="pb-28">
 
-    <header class="bg-indigo-600 px-5 pt-8 pb-16 rounded-b-[40px] shadow-lg sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <a href="/routes" class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-xl text-white backdrop-blur-md active:scale-90 transition-transform">
-                <i class="fa-solid fa-chevron-left"></i>
+    <header class="bg-indigo-600 px-5 pt-8 pb-4 rounded-b-[30px] shadow-lg sticky top-0 z-[60]">
+        <div class="flex items-center gap-3">
+            <a href="/routes" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-lg text-white backdrop-blur-md border border-white/30 active:scale-90 transition-transform">
+                <i class="fa-solid fa-chevron-left text-sm"></i>
             </a>
             <div>
-                <h1 class="text-xl font-bold text-white leading-none">เส้นทางย่อย</h1>
-                <p class="text-indigo-200 text-[10px] mt-1 uppercase tracking-widest">
-                    <%= route?.serviceName || 'Explore Sub-Routes' %>
-                </p>
+                <h1 class="text-base font-black text-white leading-none tracking-tight">แผนที่ท่องเที่ยว</h1>
+                <p class="text-[9px] text-indigo-100 font-medium uppercase tracking-tighter mt-1">Activity Route Map</p>
             </div>
         </div>
     </header>
 
-    <main class="px-5 -mt-8 relative z-10">
-        <% if (route && route.sub_routes && route.sub_routes.length > 0) { %>
-            <div class="space-y-6">
-                <% route.sub_routes.forEach(function(sub) { %>
-                    <div class="bg-white rounded-[30px] overflow-hidden shadow-sm border border-gray-100 transition-all active:scale-[0.99]">
-                        
-                        <div class="h-48 relative bg-gray-200">
-                            <img src="<%= sub.tourism_sub_route_image_cover ? sub.tourism_sub_route_image_cover : 'https://via.placeholder.com/500x300?text=No+Image' %>" 
-                                 class="w-full h-full object-cover"
-                                 onerror="this.src='https://via.placeholder.com/500x300?text=No+Image'">
-                            
-                            <% if (sub.tourism_sub_route_name_initial) { %>
-                            <div class="absolute top-4 right-4 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-full">
-                                <%= sub.tourism_sub_route_name_initial %>
-                            </div>
-                            <% } %>
-                        </div>
+    <main class="px-5 mt-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-black text-gray-800 leading-tight">
+                <%= route?.serviceName %>
+            </h2>
+            <div class="w-12 h-1 bg-indigo-500 rounded-full mt-2"></div>
+        </div>
 
-                        <div class="p-5">
-                            <h3 class="text-md font-bold text-gray-800 mb-3 leading-snug">
+        <div class="mb-6">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 block ml-1">เลือกจุดหมายของคุณ</label>
+            <div class="grid grid-cols-1 gap-3">
+                <% if (route && route.sub_routes && route.sub_routes.length > 0) { %>
+                    <% route.sub_routes.forEach(function(sub) { %>
+                        <button onclick="switchSubRoute('<%= sub.tourism_sub_route_id %>')" 
+                            id="pill-<%= sub.tourism_sub_route_id %>"
+                            class="subroute-item w-full px-5 py-4 rounded-2xl bg-white active:scale-[0.98]">
+                            <span class="flex-1 text-sm font-bold leading-snug mr-3">
                                 <%= sub.tourism_sub_route_name %>
-                            </h3>
-                            
-                            <div class="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-3">
-                                <%- sub.tourism_sub_route_detail %>
+                            </span>
+                            <div class="flex-shrink-0">
+                                <i class="fa-solid fa-chevron-right text-[10px] opacity-30"></i>
                             </div>
+                        </button>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
 
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
-                                <span class="text-[10px] text-gray-400">
-                                    <i class="fa-solid fa-sort-numeric-down mr-1"></i> ลำดับที่ <%= sub.tourism_sub_route_order %>
-                                </span>
-                                
-                                <a href="/subroute-activities/<%= sub.tourism_sub_route_id %>?mainId=<%= route.serviceID %>" 
-                                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-bold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors flex items-center gap-2">
-                                    <i class="fa-solid fa-person-walking-luggage"></i>
-                                    ดูรายละเอียดกิจกรรม (<%= (sub.activities && Array.isArray(sub.activities)) ? sub.activities.length : 0 %>)
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                <% }); %>
-            </div>
-        <% } else { %>
-            <div class="bg-white rounded-[30px] p-10 text-center shadow-sm border border-gray-100">
-                <i class="fa-solid fa-route text-gray-200 text-5xl mb-4"></i>
-                <p class="text-gray-400">ยังไม่มีข้อมูลเส้นทางย่อยสำหรับเส้นทางนี้</p>
-                <a href="/routes" class="inline-block mt-4 text-indigo-600 font-bold text-sm">ย้อนกลับ</a>
-            </div>
-        <% } %>
+        <div class="bg-white p-2 rounded-[35px] shadow-sm border border-indigo-50 mb-6">
+            <div id="map"></div>
+        </div>
+
+        <div class="mb-10">
+            <a id="btn-google-route" href="#" target="_blank" class="w-full bg-indigo-600 text-white py-4 rounded-3xl font-bold text-sm flex items-center justify-center gap-3 shadow-lg shadow-indigo-100 active:scale-95 transition-all">
+                <i class="fa-solid fa-diamond-turn-right text-lg"></i>
+                <span>นำทางทุกจุดในเส้นทางนี้</span>
+            </a>
+        </div>
+
+        <div id="activities-container" class="space-y-4"></div>
     </main>
 
     <%- include('partials/nav', { currentPage: 'services' }) %>
 
+    <script>
+        const allSubRoutes = <%- JSON.stringify(route.sub_routes) %>;
+        let map, markerGroup, polyline;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            if (allSubRoutes.length > 0) {
+                switchSubRoute(allSubRoutes[0].tourism_sub_route_id);
+            }
+        });
+
+        function initMap() {
+            map = L.map('map', { zoomControl: false, attributionControl: false });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map);
+            markerGroup = L.featureGroup().addTo(map);
+        }
+
+        function switchSubRoute(subId) {
+            document.querySelectorAll('.subroute-item').forEach(el => {
+                el.classList.remove('active');
+                const icon = el.querySelector('i');
+                if(icon) icon.className = 'fa-solid fa-chevron-right text-[10px] opacity-30';
+            });
+            
+            const activeBtn = document.getElementById('pill-' + subId);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+                const icon = activeBtn.querySelector('i');
+                if(icon) icon.className = 'fa-solid fa-check text-[10px] text-white';
+            }
+
+            const selectedRoute = allSubRoutes.find(r => r.tourism_sub_route_id == subId);
+            if (!selectedRoute) return;
+
+            const activities = selectedRoute.activities || [];
+            markerGroup.clearLayers();
+            if (polyline) map.removeLayer(polyline);
+
+            const pathCoords = [];
+            activities.forEach((item, index) => {
+                const act = item.activity;
+                const pos = [parseFloat(act.activity_latitude), parseFloat(act.activity_longitude)];
+                if (!isNaN(pos[0])) {
+                    pathCoords.push(pos);
+                    const order = item.tourism_sub_route_activity_order || (index + 1);
+                    L.marker(pos, { 
+                        icon: L.divIcon({ 
+                            className: '', 
+                            html: `<div class="number-marker">${order}</div>`, 
+                            iconSize: [28, 28], iconAnchor: [14, 14] 
+                        }) 
+                    }).addTo(markerGroup);
+                }
+            });
+
+            if (pathCoords.length > 0) {
+                polyline = L.polyline(pathCoords, { color: '#4f46e5', weight: 3, dashArray: '10, 10', opacity: 0.4 }).addTo(map);
+                map.fitBounds(markerGroup.getBounds().pad(0.3));
+                updateGoogleMapsUrl(pathCoords);
+            }
+            renderActivities(activities);
+        }
+
+        function renderActivities(activities) {
+            const container = document.getElementById('activities-container');
+            container.innerHTML = activities.map((item, index) => {
+                const act = item.activity;
+                return `
+                    <div class="bg-white rounded-[30px] overflow-hidden shadow-sm border border-gray-100 flex flex-col mb-4">
+                        <div class="h-44 relative">
+                            <img src="${act.activity_image_cover}" class="w-full h-full object-cover">
+                            <div class="absolute top-4 left-4 bg-indigo-600 text-white px-3 py-1 rounded-full text-[10px] font-bold">จุดที่ ${index + 1}</div>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-sm font-bold text-gray-800 mb-1">${act.activity_name}</h3>
+                            <div class="text-[11px] text-gray-500 line-clamp-2 mb-3">${act.activity_detail}</div>
+                            <div class="flex items-center justify-between border-t border-gray-50 pt-3">
+                                <span class="text-[11px] font-bold text-indigo-600">${act.activity_price > 0 ? act.activity_price + ' ฿' : 'ฟรี'}</span>
+                                <a href="https://www.google.com/maps?q=${act.activity_latitude},${act.activity_longitude}" target="_blank" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-bold">นำทาง</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateGoogleMapsUrl(coords) {
+            const origin = coords[0].join(',');
+            const destination = coords[coords.length - 1].join(',');
+            let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+            if (coords.length > 2) {
+                url += `&waypoints=${coords.slice(1, -1).map(c => c.join(',')).join('|')}`;
+            }
+            document.getElementById('btn-google-route').href = url;
+        }
+    </script>
 </body>
 </html>
