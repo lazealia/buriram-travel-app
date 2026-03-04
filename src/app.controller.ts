@@ -12,7 +12,7 @@ export class AppController {
 
   constructor(private readonly appService: AppService) {}
 
-  private cache: { [key: string]: { data: any[], lastFetch: number } } = {
+private cache: { [key: string]: { data: any[], lastFetch: number } } = {
     news: { data: [], lastFetch: 0 },
     products: { data: [], lastFetch: 0 },
     accommodations: { data: [], lastFetch: 0 },
@@ -21,24 +21,31 @@ export class AppController {
     activities: { data: [], lastFetch: 0 }
   };
   private readonly CACHE_TTL = 300 * 1000;
-  // private readonly CACHE_TTL = 0;
+
   private async getCachedData(key: string, url: string) {
     const now = Date.now();
-    if (this.cache[key].data.length > 0 && (now - this.cache[key].lastFetch) < this.CACHE_TTL) {
+    
+    if (!this.cache[key]) {
+      this.cache[key] = { data: [], lastFetch: 0 };
+    }
+
+    if (this.cache[key].data && this.cache[key].data.length > 0 && (now - this.cache[key].lastFetch) < this.CACHE_TTL) {
       return this.cache[key].data;
     }
+
     try {
-      const response = await axios.get(url);
-      let fetchedData = response.data?.data || response.data?.products || response.data || [];
+      const response = await axios.get(url, { timeout: 10000 });
+      let fetchedData = response.data?.data || response.data?.products || response.data;
+      if (!fetchedData) fetchedData = [];
       if (!Array.isArray(fetchedData)) fetchedData = [fetchedData];
       this.cache[key] = { data: fetchedData, lastFetch: now };
       return fetchedData;
     } catch (error) {
       console.error(`Cache Error (${key}):`, error.message);
-      return this.cache[key].data;
+      return this.cache[key]?.data || [];
     }
   }
-
+  
   @Post('api/chat')
   async handleChat(@Body('message') message: string) {
     const rawMsg = message?.trim() || '';
