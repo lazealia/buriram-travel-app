@@ -20,7 +20,7 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
     routes: { data: [], lastFetch: 0 },
     activities: { data: [], lastFetch: 0 }
   };
-  private readonly CACHE_TTL = 300 * 1000;
+  private readonly CACHE_TTL = 1 * 1000;
 
   private async getCachedData(key: string, url: string) {
     const now = Date.now();
@@ -298,13 +298,11 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
     const perPage = 20;
     const currentPage = parseInt(page) || 1;
 
-    // 1. กรองข้อมูลเบื้องต้น (รูปภาพ และ ช่องทางติดต่อ)
+    // 1. กรองข้อมูลเบื้องต้น
     let data = allData.filter(p => {
       const img = p.serviceImage || '';
       const orderLink = (p.serviceOrder?.OrderLink || '').trim().toLowerCase();
       const bookingLink = (p.serviceOrder?.BookingLink || '').trim().toLowerCase();
-      
-      // *** แก้ไข: ใช้ Telephone และ Line ให้ตรงกับ JSON ***
       const tel = (p.serviceContact?.Telephone || '').trim();
       const line = (p.serviceContact?.Line || '').trim();
 
@@ -312,7 +310,6 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       const hasValidOrder = orderLink !== '' && !orderLink.startsWith('xxx');
       const hasValidBooking = bookingLink !== '' && !bookingLink.startsWith('xxx');
       
-      // เช็คว่ามีอย่างใดอย่างหนึ่ง: ลิงก์ซื้อ, ลิงก์จอง, เบอร์โทร หรือ ไอดีไลน์
       const hasContact = hasValidOrder || 
                          hasValidBooking || 
                          (tel !== '' && tel !== '-' && tel !== 'ไม่ได้ระบุ') ||
@@ -321,30 +318,21 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       return isImgValid && hasContact;
     });
 
-    // 2. กรองตามหมวดหมู่ (แก้ไขให้มี 5 ประเภทตาม EJS)
+    // 2. กรองตามหมวดหมู่
     if (cat !== 'ทั้งหมด') {
       data = data.filter(item => {
         const gName = item.serviceGroup?.GroupName || '';
         let itemCat = 'อื่นๆ';
-
-        // แยก 'ผลไม้' ออกจาก 'ของกิน'
-        if (gName.includes('ผลไม้')) {
-          itemCat = 'ผลไม้';
-        } else if (gName.includes('อาหาร') || gName.includes('ข้าว') || gName.includes('บริโภค')) {
-          itemCat = 'ของกิน';
-        } else if (gName.includes('จักสาน') || gName.includes('ฝีมือ') || gName.includes('กระเป๋า') || gName.includes('เครื่องใช้')) {
-          itemCat = 'ของใช้';
-        } else if (gName.includes('ผ้า')) {
-          itemCat = 'ผ้าไหม';
-        } else if (gName.includes('สมุนไพร') || gName.includes('สุขภาพ')) {
-          itemCat = 'สุขภาพ';
-        }
-
+        if (gName.includes('ผลไม้')) itemCat = 'ผลไม้';
+        else if (gName.includes('อาหาร') || gName.includes('ข้าว') || gName.includes('บริโภค')) itemCat = 'ของกิน';
+        else if (gName.includes('จักสาน') || gName.includes('ฝีมือ') || gName.includes('กระเป๋า') || gName.includes('เครื่องใช้')) itemCat = 'ของใช้';
+        else if (gName.includes('ผ้า')) itemCat = 'ผ้าไหม';
+        else if (gName.includes('สมุนไพร') || gName.includes('สุขภาพ')) itemCat = 'สุขภาพ';
         return itemCat === cat;
       });
     }
 
-    // 3. กรองตามคำค้นหา (Search)
+    // 3. กรองตามคำค้นหา
     if (s) {
       const searchLower = s.toLowerCase();
       data = data.filter(p => 
@@ -353,7 +341,6 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       );
     }
 
-    // 4. จัดทำ Pagination
     const totalItems = data.length;
     const totalPages = Math.ceil(totalItems / perPage);
     const paginatedData = data.slice((currentPage - 1) * perPage, currentPage * perPage);
@@ -372,6 +359,21 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       }
     };
   }
+
+  @Get('api/product-detail/:code')
+  async getProductDetail(@Param('code') code: string) {
+    const baseUrl = process.env.RCBT_BASE_URL!.replace(/\/$/, '');
+    const targetUrl = `${baseUrl}/products/detail/${code}`;
+    
+    try {
+      const res = await axios.get(targetUrl);
+      return { data: res.data?.data?.[0] || res.data };
+    } catch (e) {
+      console.error('API Error:', e.message);
+      return { data: null };
+    }
+  }
+
 
   @Get('chat')
   @Render('chat')
