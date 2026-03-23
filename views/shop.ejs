@@ -48,7 +48,7 @@
     </header>
 
     <div class="px-4 mt-6 mb-2 flex space-x-2 overflow-x-auto no-scrollbar py-2">
-        <% ['ทั้งหมด', 'ของกิน', 'ผลไม้', 'ของใช้', 'ผ้าไหม', 'สุขภาพ'].forEach((cat) => { %>
+        <% ['ทั้งหมด', 'กิจกรรมท่องเที่ยว','ของกิน', 'ผลไม้', 'ของใช้', 'ผ้าไหม', 'สุขภาพ'].forEach((cat) => { %>
             <a href="/shop?category=<%= cat %>&search=<%= pagination.search %>" 
                 class="category-pill <%= pagination.category === cat ? 'active' : '' %> whitespace-nowrap px-6 py-2 rounded-full border border-orange-200 text-xs font-bold text-orange-600 bg-white shadow-sm transition-all">
                 <%= cat %>
@@ -229,7 +229,6 @@
             const vFrame = document.getElementById('modalVideoFrame');
             const actionBtn = document.getElementById('modalActionBtn');
 
-            // 1. Reset & Set initial data
             vFrame.src = "";
             vContainer.classList.add('hidden');
             content.querySelector('.overflow-y-auto').scrollTop = 0;
@@ -240,7 +239,6 @@
             document.getElementById('modalImage').src = image;
             document.getElementById('modalPrice').innerText = price;
 
-            // Set Action Button
             actionBtn.href = actionUrl;
             actionBtn.className = `w-full py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 text-white font-bold transition-transform active:scale-95 min-h-[56px] ${btnClass}`;
             document.getElementById('modalActionText').innerText = btnText;
@@ -261,18 +259,15 @@
             setupLink('linkTikTok', tiktok);
             setupLink('linkEmail', email, 'mailto:');
 
-            // Open Modal
             modal.classList.remove('hidden');
             setTimeout(() => content.classList.remove('translate-y-full'), 10);
             document.body.style.overflow = 'hidden';
 
-            // 2. Fetch Detail for Video
             if (sCode) {
                 try {
                     const response = await fetch(`/api/product-detail/${sCode}`);
                     const result = await response.json();
                     
-                    // ปรับการอ่านค่าให้ตรงกับ axios response (data.data)
                     const fullData = result.data; 
 
                     if (fullData && !isInvalidValue(fullData.serviceVideo)) {
@@ -287,7 +282,6 @@
                         }
                     }
 
-                    // เช็คปุ่มสั่งซื้ออีกครั้งจากข้อมูล API ใหม่ (เผื่อมีลิงก์ตรง)
                     if (fullData?.serviceOrder?.OrderLink && !isInvalidValue(fullData.serviceOrder.OrderLink)) {
                         actionBtn.href = fullData.serviceOrder.OrderLink;
                         actionBtn.className = actionBtn.className.replace(/bg-\S+/, 'bg-green-600');
@@ -301,9 +295,13 @@
 
             document.getElementById('modalShareBtn').onclick = (e) => {
                 e.preventDefault();
-                const shareUrl = `${window.location.origin}/shop?search=${sCode}`;
+                const shareUrl = `${window.location.origin}/shop?open=${sCode}`; 
                 if (navigator.share) {
-                    navigator.share({ title: name, url: shareUrl }).catch(() => {});
+                    navigator.share({ 
+                        title: name, 
+                        text: `ดูรายละเอียด ${name} ที่ตลาดชุมชน`,
+                        url: shareUrl 
+                    }).catch(() => {});
                 } else {
                     navigator.clipboard.writeText(shareUrl);
                     alert('คัดลอกลิงก์แชร์แล้ว!');
@@ -321,6 +319,15 @@
                 document.body.style.overflow = '';
             }, 300);
         }
+       
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const openCode = urlParams.get('open');
+            if (openCode) {
+                const target = document.querySelector(`[onclick*="${openCode}"]`);
+                if (target) target.click();
+            }
+        });
     </script>
 </body>
 </html>

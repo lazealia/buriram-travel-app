@@ -20,7 +20,7 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
     routes: { data: [], lastFetch: 0 },
     activities: { data: [], lastFetch: 0 }
   };
-  private readonly CACHE_TTL = 1 * 1000;
+  private readonly CACHE_TTL = 150 * 1000;
 
   private async getCachedData(key: string, url: string) {
     const now = Date.now();
@@ -292,13 +292,13 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
   async getShop(
     @Query('search') s?: string, 
     @Query('page') page: string = '1',
-    @Query('category') cat: string = 'ทั้งหมด'
+    @Query('category') cat: string = 'ทั้งหมด',
+    @Query('open') openId?: string // <--- เพิ่มตัวแปรรับค่า ID ที่ต้องการเปิด
   ) {
     const allData = await this.getCachedData('products', process.env.RCBT_PRODUCT_URL!);
     const perPage = 20;
     const currentPage = parseInt(page) || 1;
 
-    // 1. กรองข้อมูลเบื้องต้น
     let data = allData.filter(p => {
       const img = p.serviceImage || '';
       const orderLink = (p.serviceOrder?.OrderLink || '').trim().toLowerCase();
@@ -318,12 +318,12 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       return isImgValid && hasContact;
     });
 
-    // 2. กรองตามหมวดหมู่
     if (cat !== 'ทั้งหมด') {
       data = data.filter(item => {
         const gName = item.serviceGroup?.GroupName || '';
         let itemCat = 'อื่นๆ';
         if (gName.includes('ผลไม้')) itemCat = 'ผลไม้';
+        else if (gName.includes('กิจกรรม')) itemCat = 'กิจกรรมท่องเที่ยว';
         else if (gName.includes('อาหาร') || gName.includes('ข้าว') || gName.includes('บริโภค')) itemCat = 'ของกิน';
         else if (gName.includes('จักสาน') || gName.includes('ฝีมือ') || gName.includes('กระเป๋า') || gName.includes('เครื่องใช้')) itemCat = 'ของใช้';
         else if (gName.includes('ผ้า')) itemCat = 'ผ้าไหม';
@@ -332,13 +332,20 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
       });
     }
 
-    // 3. กรองตามคำค้นหา
     if (s) {
       const searchLower = s.toLowerCase();
       data = data.filter(p => 
         (p.serviceName?.toLowerCase().includes(searchLower)) || 
         (p.serviceContact?.OwnerName?.toLowerCase().includes(searchLower))
       );
+    }
+
+    if (openId) {
+      const targetIndex = data.findIndex(p => p.serviceCode === openId);
+      if (targetIndex > -1) {
+        const [targetItem] = data.splice(targetIndex, 1);
+        data.unshift(targetItem);
+      }
     }
 
     const totalItems = data.length;
@@ -355,7 +362,8 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
         hasNext: currentPage < totalPages,
         hasPrev: currentPage > 1,
         search: s || '',
-        category: cat 
+        category: cat,
+        open: openId || ''
       }
     };
   }
