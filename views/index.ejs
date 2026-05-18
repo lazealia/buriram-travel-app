@@ -11,73 +11,32 @@
     <style>
         body { font-family: 'Kanit', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .news-gradient { background: linear-gradient(180deg, rgba(79, 70, 229, 0) 30%, rgba(0, 0, 0, 0.85) 100%); }
         
-        /* สไตล์ Splash Screen ใหม่: Speed & Rainbow */
+        /* Splash Screen Style */
         #splash-screen {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: radial-gradient(circle at center, #6366f1 0%, #4f46e5 100%);
         }
-
         .splash-played #splash-screen { display: none !important; }
-
-        .logo-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .logo-circle {
-            width: 100px;
-            height: 100px;
-            background: white;
-            border-radius: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100px; height: 100px; background: white; border-radius: 35px;
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             animation: speed-in 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
-        .rainbow-track {
-            position: absolute;
-            width: 140px;
-            height: 140px;
-            border: 4px solid transparent;
-            border-top-color: #fbbf24;
-            border-right-color: #ef4444;
-            border-radius: 50%;
-            animation: spin 2s linear infinite;
-            opacity: 0.4;
-        }
-
         @keyframes speed-in {
             0% { transform: translateX(-200%) rotate(-20deg); opacity: 0; }
             100% { transform: translateX(0) rotate(0deg); opacity: 1; }
         }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .brand-text {
-            margin-top: 24px;
-            text-align: center;
-            animation: fade-up 1s ease-out;
-        }
-
-        @keyframes fade-up {
-            0% { transform: translateY(20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
         .is-loading { overflow: hidden; height: 100vh; }
         .splash-fade-out { opacity: 0; pointer-events: none; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform: scale(1.1); }
+        @keyframes loading {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(1); transform-origin: left; }
+            51% { transform-origin: right; }
+            100% { transform: scaleX(0); transform-origin: right; }
+        }
     </style>
 
     <script>
@@ -89,33 +48,20 @@
 <body class="bg-gray-50 pb-28">
 
     <div id="splash-screen">
-        <div class="logo-container">
-            <div class="rainbow-track"></div>
+        <div class="logo-container relative flex items-center justify-center">
+            <div class="rainbow-track absolute w-[140px] h-[140px] border-[4px] border-transparent border-t-yellow-400 border-r-red-400 rounded-full animate-[spin_2s_linear_infinite] opacity-40"></div>
             <div class="logo-circle">
                 <i class="fa-solid fa-rainbow text-5xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent"></i>
             </div>
         </div>
-        <div class="brand-text">
+        <div class="brand-text mt-6 text-center animate-[fade-up_1s_ease-out]">
             <h1 class="text-white text-3xl font-black tracking-tight italic uppercase">BURIRAM <span class="text-yellow-400">GO!</span></h1>
-            <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="h-[1px] w-6 bg-white/30 rounded-full"></span>
-                <p class="text-[9px] text-indigo-100 font-bold uppercase tracking-[0.2em]">Sport & Speed City</p>
-                <span class="h-[1px] w-6 bg-white/30 rounded-full"></span>
-            </div>
+            <p class="text-[10px] text-indigo-100 font-bold uppercase tracking-[0.2em] mt-2">Sport & Speed City</p>
         </div>
-        <div class="absolute bottom-16 w-32 h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/5">
+        <div class="absolute bottom-16 w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div class="h-full bg-gradient-to-r from-yellow-400 to-orange-500 w-full origin-left animate-[loading_1.8s_ease-in-out_infinite]"></div>
         </div>
     </div>
-
-    <style>
-        @keyframes loading {
-            0% { transform: scaleX(0); }
-            50% { transform: scaleX(1); transform-origin: left; }
-            51% { transform-origin: right; }
-            100% { transform: scaleX(0); transform-origin: right; }
-        }
-    </style>
 
     <header class="bg-indigo-600 px-6 pt-10 pb-14 rounded-b-[45px] shadow-lg relative">
         <div class="flex justify-between items-center text-white">
@@ -129,62 +75,99 @@
                 </div>
             </div>
         </div>
-        
         <form action="/" method="GET" class="absolute -bottom-6 left-6 right-6 bg-white rounded-2xl shadow-xl flex items-center px-5 py-3.5 border border-gray-100">
             <i class="fa-solid fa-magnifying-glass text-indigo-400 mr-3 text-sm"></i>
-            <input type="text" name="search" placeholder="ค้นหากิจกรรม มาราธอน แข่งรถ..." class="bg-transparent border-none outline-none text-xs w-full text-gray-600 font-medium">
+            <input type="text" name="search" placeholder="ค้นหาข่าวสารและกิจกรรม..." class="bg-transparent border-none outline-none text-xs w-full text-gray-600 font-medium">
         </form>
     </header>
 
-    <main class="mt-10 px-6">
-        <div class="mb-8">
-            <h2 class="font-bold text-gray-800 text-base mb-4">กิจกรรมยอดฮิต</h2>
-            <div class="flex space-x-4 overflow-x-auto no-scrollbar py-1">
-                <% if (news && news.length > 0) { %>
-                    <% news.slice(0, 3).forEach(function(item) { %>
-                        <div onclick="location.href='/news/<%= item.id %>'" class="min-w-[280px] h-44 bg-gray-200 rounded-[30px] relative overflow-hidden shadow-md active:scale-95 transition-transform cursor-pointer">
-                            <img src="<%= item.img %>" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x300'">
-                            <div class="absolute inset-0 news-gradient flex flex-col justify-end p-5">
-                                <span class="bg-white/20 backdrop-blur-md text-white text-[8px] px-2 py-0.5 rounded-md w-fit mb-2 border border-white/30"><%= item.category %></span>
-                                <h3 class="text-white font-bold text-sm line-clamp-2 leading-tight"><%= item.title %></h3>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } %>
+    <main class="mt-12 px-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="font-bold text-gray-800 text-lg uppercase italic tracking-tight">Latest <span class="text-indigo-600">News</span></h2>
+                <p class="text-[10px] text-gray-400 font-medium">อัปเดตอัตโนมัติจาก ททท. บุรีรัมย์</p>
+            </div>
+            <div class="w-9 h-9 bg-blue-50 rounded-2xl flex items-center justify-center border border-blue-100 shadow-sm">
+                <i class="fa-brands fa-facebook-f text-blue-600 text-sm"></i>
             </div>
         </div>
 
-        <h2 class="font-bold text-gray-800 text-base mb-4">ข่าวสารล่าสุด</h2>
-        <div class="space-y-4">
-            <% if (news && news.length > 0) { %>
-                <% news.forEach(function(item) { %>
-                    <div onclick="location.href='/news/<%= item.id %>'" class="bg-white p-3 rounded-[30px] shadow-sm border border-gray-100 flex items-center gap-4 active:bg-gray-50 transition-colors cursor-pointer">
-                        <img src="<%= item.img %>" class="w-20 h-20 rounded-[22px] object-cover shadow-sm">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1 text-[9px]">
-                                <span class="font-bold text-indigo-500 uppercase"><%= item.category %></span>
-                                <span class="text-gray-400"><%= item.date %></span>
-                            </div>
-                            <h3 class="font-bold text-gray-800 text-[11px] line-clamp-2 leading-snug"><%= item.title %></h3>
-                        </div>
+        <div id="auto-news-container" class="space-y-4">
+            <div class="animate-pulse space-y-4">
+                <% for(let i=0; i<6; i++) { %>
+                <div class="bg-white p-3 rounded-[35px] border border-gray-100 flex items-center gap-4">
+                    <div class="w-20 h-20 bg-gray-200 rounded-[25px]"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-2 bg-gray-200 rounded w-1/4"></div>
+                        <div class="h-3 bg-gray-200 rounded w-full"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
                     </div>
-                <% }); %>
-            <% } %>
+                </div>
+                <% } %>
+            </div>
         </div>
     </main>
 
     <%- include('partials/nav', { currentPage: 'home' }) %>
 
     <script>
+        async function fetchAutoNews() {
+            const JSON_URL = 'https://rss.app/feeds/v1.1/38gKPRgM8EqYk9SM.json';
+            try {
+                const response = await fetch(JSON_URL);
+                const data = await response.json();
+                const container = document.getElementById('auto-news-container');
+
+                if (data.items && data.items.length > 0) {
+                    container.innerHTML = ''; // ล้าง Skeleton
+                    data.items.slice(0, 15).forEach(item => {
+                        const date = new Date(item.date_published).toLocaleDateString('th-TH', {
+                            day: 'numeric', month: 'short', year: '2-digit'
+                        });
+                        const image = item.image || (item.attachments && item.attachments[0]?.url) || 'https://via.placeholder.com/300x200?text=TAT+Buriram';
+                        
+                        const card = `
+                            <div onclick="window.open('${item.url}', '_blank')" class="bg-white p-3 rounded-[35px] shadow-sm border border-gray-100 flex items-center gap-4 active:scale-95 transition-all duration-300 cursor-pointer">
+                                <div class="relative min-w-[85px]">
+                                    <img src="${image}" class="w-20 h-20 rounded-[25px] object-cover shadow-sm bg-gray-50">
+                                    <div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center">
+                                        <i class="fa-brands fa-facebook-f text-[10px] text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1.5">
+                                        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-tighter">Official Update</span>
+                                        <span class="text-[9px] text-gray-400 font-medium">${date}</span>
+                                    </div>
+                                    <h3 class="font-bold text-gray-800 text-[11px] line-clamp-2 leading-snug">
+                                        ${item.title || item.content_text?.substring(0, 80) + '...'}
+                                    </h3>
+                                    <div class="flex items-center mt-2 text-blue-500 text-[9px] font-bold">
+                                        <span>อ่านรายละเอียด</span>
+                                        <i class="fa-solid fa-arrow-right ml-1 text-[7px]"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML += card;
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('auto-news-container').innerHTML = '<p class="text-center text-xs text-gray-400 py-20">ขออภัย ไม่สามารถโหลดข้อมูลได้ในขณะนี้</p>';
+            }
+        }
+
+        // Initialize
         (function() {
             const splash = document.getElementById('splash-screen');
-            const isPlayed = sessionStorage.getItem('splashPlayed');
+            fetchAutoNews(); 
 
-            if (isPlayed) {
+            if (sessionStorage.getItem('splashPlayed')) {
                 if (splash) splash.remove();
             } else {
                 document.body.classList.add('is-loading');
-                window.addEventListener('load', function() {
+                window.addEventListener('load', () => {
                     setTimeout(() => {
                         if (splash) {
                             splash.classList.add('splash-fade-out');

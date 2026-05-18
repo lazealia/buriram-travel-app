@@ -5,9 +5,14 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  private groq = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1"
+  // private groq = new OpenAI({
+  //   apiKey: process.env.GROQ_API_KEY,
+  //   baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1"
+  // });
+
+  private typhoon = new OpenAI({
+    apiKey: process.env.TYPHOON_API_KEY,
+    baseURL: process.env.TYPHOON_BASE_URL || "https://api.opentyphoon.ai/v1"
   });
 
   constructor(private readonly appService: AppService) {}
@@ -96,12 +101,12 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
         }
       }
 
-      const chatCompletion = await this.groq.chat.completions.create({
+      const chatCompletion = await this.typhoon.chat.completions.create({
         messages: [
-          { role: "system", content: "คุณคือ 'น้องรุ้ง' AI นำเที่ยวบุรีรัมย์ ตอบเป็นภาษาไทย ร่าเริง มีหางเสียง คะ/ขา" },
+          { role: "system", content: "คุณคือ 'น้องรุ้ง' AI นำเที่ยวบุรีรัมย์ เพศหญิง ตอบเป็นภาษาไทย ร่าเริง มีหางเสียง" },
           { role: "user", content: rawMsg }
         ],
-        model: "moonshotai/kimi-k2-instruct",
+        model: "typhoon-v2.5-30b-a3b-instruct",
         temperature: 0.3
       });
 
