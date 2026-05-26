@@ -12,7 +12,6 @@
         body { font-family: 'Kanit', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Splash Screen Style */
         #splash-screen {
             position: fixed; inset: 0; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -85,7 +84,7 @@
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h2 class="font-bold text-gray-800 text-lg uppercase italic tracking-tight">Latest <span class="text-indigo-600">News</span></h2>
-                <p class="text-[10px] text-gray-400 font-medium">อัปเดตอัตโนมัติจาก ททท. บุรีรัมย์</p>
+                <p class="text-[10px] text-gray-400 font-medium italic">Auto-sync with Facebook</p>
             </div>
             <div class="w-9 h-9 bg-blue-50 rounded-2xl flex items-center justify-center border border-blue-100 shadow-sm">
                 <i class="fa-brands fa-facebook-f text-blue-600 text-sm"></i>
@@ -93,14 +92,13 @@
         </div>
 
         <div id="auto-news-container" class="space-y-4">
-            <div class="animate-pulse space-y-4">
+            <div class="animate-pulse space-y-4 skeleton-loader">
                 <% for(let i=0; i<6; i++) { %>
                 <div class="bg-white p-3 rounded-[35px] border border-gray-100 flex items-center gap-4">
                     <div class="w-20 h-20 bg-gray-200 rounded-[25px]"></div>
                     <div class="flex-1 space-y-2">
                         <div class="h-2 bg-gray-200 rounded w-1/4"></div>
                         <div class="h-3 bg-gray-200 rounded w-full"></div>
-                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
                     </div>
                 </div>
                 <% } %>
@@ -112,38 +110,75 @@
 
     <script>
         async function fetchAutoNews() {
-            const JSON_URL = 'https://rss.app/feeds/v1.1/38gKPRgM8EqYk9SM.json';
+            const APIFY_URL = '<%= fbApiUrl %>';
+            
             try {
-                const response = await fetch(JSON_URL);
+                const response = await fetch(APIFY_URL);
                 const data = await response.json();
                 const container = document.getElementById('auto-news-container');
 
-                if (data.items && data.items.length > 0) {
-                    container.innerHTML = ''; // ล้าง Skeleton
-                    data.items.slice(0, 15).forEach(item => {
-                        const date = new Date(item.date_published).toLocaleDateString('th-TH', {
+                if (Array.isArray(data) && data.length > 0) {
+                    container.innerHTML = ''; 
+                    
+                    data.reverse().slice(0, 15).forEach(item => {
+                        const date = item.time ? new Date(item.time).toLocaleDateString('th-TH', {
                             day: 'numeric', month: 'short', year: '2-digit'
-                        });
-                        const image = item.image || (item.attachments && item.attachments[0]?.url) || 'https://via.placeholder.com/300x200?text=TAT+Buriram';
+                        }) : 'ข่าวล่าสุด';
+
+                        let rawImage = '';
+
+                        // 1. เช็ค Media หลัก
+                        if (item.media && item.media[0]) {
+                            rawImage = item.media[0].photo_image?.uri || item.media[0].thumbnail;
+                        }
+
+                        // 2. เช็ค Attachments (อัลบั้มภาพ)
+                        if (!rawImage && item.attachments && item.attachments[0]) {
+                            const att = item.attachments[0];
+                            rawImage = att.media?.image?.uri || 
+                                       att.target?.preview_image?.uri || 
+                                       (att.subattachments && att.subattachments[0]?.media?.image?.uri);
+                        }
                         
+                        // 3. เช็ค Shared Post
+                        if (!rawImage && item.sharedPost) {
+                            const sp = item.sharedPost;
+                            rawImage = (sp.media && sp.media[0]?.photo_image?.uri) || 
+                                       (sp.attachments && sp.attachments[0]?.media?.image?.uri) ||
+                                       (sp.attachments && sp.attachments[0]?.subattachments && sp.attachments[0].subattachments[0]?.media?.image?.uri);
+                        }
+
+                        // 4. ถ้ายังไม่มีรูปภาพ ให้ใช้รูปโปรไฟล์ของเพจแทน (ตามโจทย์)
+                        if (!rawImage && item.user && item.user.profilePic) {
+                            rawImage = item.user.profilePic;
+                        }
+
+                        const image = rawImage 
+                            ? `https://images.weserv.nl/?url=${encodeURIComponent(rawImage)}&w=300&h=300&fit=cover&output=jpg` 
+                            : 'https://via.placeholder.com/300x300?text=TAT+Buriram';
+
+                        const rawText = item.text || (item.sharedPost && item.sharedPost.text) || item.caption || 'ข่าวประชาสัมพันธ์จาก ททท. บุรีรัมย์';
+                        const title = rawText.length > 85 ? rawText.substring(0, 85) + '...' : rawText;
+
                         const card = `
                             <div onclick="window.open('${item.url}', '_blank')" class="bg-white p-3 rounded-[35px] shadow-sm border border-gray-100 flex items-center gap-4 active:scale-95 transition-all duration-300 cursor-pointer">
                                 <div class="relative min-w-[85px]">
-                                    <img src="${image}" class="w-20 h-20 rounded-[25px] object-cover shadow-sm bg-gray-50">
+                                    <img src="${image}" class="w-20 h-20 rounded-[25px] object-cover shadow-sm bg-gray-50" 
+                                         onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300?text=News';">
                                     <div class="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center">
                                         <i class="fa-brands fa-facebook-f text-[10px] text-white"></i>
                                     </div>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1.5">
-                                        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-tighter">Official Update</span>
+                                        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-tighter">Facebook News</span>
                                         <span class="text-[9px] text-gray-400 font-medium">${date}</span>
                                     </div>
                                     <h3 class="font-bold text-gray-800 text-[11px] line-clamp-2 leading-snug">
-                                        ${item.title || item.content_text?.substring(0, 80) + '...'}
+                                        ${title}
                                     </h3>
                                     <div class="flex items-center mt-2 text-blue-500 text-[9px] font-bold">
-                                        <span>อ่านรายละเอียด</span>
+                                        <span>ดูรายละเอียด</span>
                                         <i class="fa-solid fa-arrow-right ml-1 text-[7px]"></i>
                                     </div>
                                 </div>
@@ -151,14 +186,15 @@
                         `;
                         container.innerHTML += card;
                     });
+                } else {
+                    container.innerHTML = '<p class="text-center text-xs text-gray-400 py-20">ไม่พบข้อมูลข่าวสารในขณะนี้</p>';
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Fetch Error:', error);
                 document.getElementById('auto-news-container').innerHTML = '<p class="text-center text-xs text-gray-400 py-20">ขออภัย ไม่สามารถโหลดข้อมูลได้ในขณะนี้</p>';
             }
         }
 
-        // Initialize
         (function() {
             const splash = document.getElementById('splash-screen');
             fetchAutoNews(); 

@@ -145,7 +145,13 @@ private cache: { [key: string]: { data: any[], lastFetch: number } } = {
   async getIndex(@Query('search') search?: string) {
     let news = await this.getCachedData('news', process.env.NEWS_SHEET_URL!);
     if (search) news = news.filter(n => n.title?.toLowerCase().includes(search.toLowerCase()));
-    return { currentPage: 'home', appName: 'Buriram Go', news };
+    
+    return { 
+      currentPage: 'home', 
+      appName: 'Buriram Go', 
+      news,
+      fbApiUrl: process.env.TAT_FB_PAGE 
+    };
   }
 
   @Get('/news/:id')
